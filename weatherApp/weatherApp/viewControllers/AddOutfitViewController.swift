@@ -65,18 +65,57 @@ class AddOutfitViewController: UIViewController, UIPickerViewDelegate, UIPickerV
             if let index = weatherOptions.firstIndex(of: outfit.weatherTypes.first ?? "") {
                 weatherTypePicker.selectRow(index, inComponent: 0, animated: false)
             }
+        } else {
+            // Set default values for new outfit
+            resetForm()
         }
+    }
+
+    private func resetForm() {
+        // Reset text fields
+        nameTextField.text = ""
+        clothingItemsTextField.text = ""
+        
+        // Reset clothing items
+        clothingItems.removeAll()
+        tableView.reloadData()
+        
+        // Reset pickers to default values
+        minTempPicker.selectRow(temperatures.firstIndex(of: 60) ?? 0, inComponent: 0, animated: false)
+        maxTempPicker.selectRow(temperatures.firstIndex(of: 80) ?? 0, inComponent: 0, animated: false)
+        weatherTypePicker.selectRow(0, inComponent: 0, animated: false)
+        selectedWeatherType = weatherOptions[0]
+        
+        // Reset delete button
+        deleteButton.isEnabled = false
+        selectedItemIndex = nil
     }
 
     // ✅ Save Outfit
     @IBAction func saveTapped(_ sender: UIButton) {
-        guard let name = nameTextField.text, !clothingItems.isEmpty, let weather = selectedWeatherType else {
-            showError(message: "Please fill all fields and add at least one clothing item")
+        guard let name = nameTextField.text, !name.isEmpty else {
+            showError(message: "Please enter an outfit name")
+            return
+        }
+        
+        guard !clothingItems.isEmpty else {
+            showError(message: "Please add at least one clothing item")
+            return
+        }
+        
+        guard let weather = selectedWeatherType else {
+            showError(message: "Please select a weather type")
             return
         }
 
         let minTemp = temperatures[minTempPicker.selectedRow(inComponent: 0)]
         let maxTemp = temperatures[maxTempPicker.selectedRow(inComponent: 0)]
+        
+        // Validate temperature range
+        guard minTemp <= maxTemp else {
+            showError(message: "Minimum temperature should be less than or equal to maximum temperature")
+            return
+        }
 
         let newOutfit = Outfit(
             name: name,
@@ -95,13 +134,17 @@ class AddOutfitViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         // Post notification that outfit was updated
         NotificationCenter.default.post(name: NSNotification.Name("OutfitUpdated"), object: nil)
 
-        // Send system notification
-        NotificationManager.shared.sendNotification(
-            title: "New Outfit Added",
-            message: "You added \(name) to your outfits."
+        // Show success message
+        let alert = UIAlertController(
+            title: "Success",
+            message: "Outfit saved successfully!",
+            preferredStyle: .alert
         )
-
-        navigationController?.popViewController(animated: true)
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            // Reset the form after user acknowledges the save
+            self?.resetForm()
+        })
+        present(alert, animated: true)
     }
 
     // ✅ Add Clothing Item

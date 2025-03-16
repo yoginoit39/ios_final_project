@@ -176,12 +176,14 @@ class WeatherService {
     }
     
     func getCurrentWeather(latitude: Double, longitude: Double) async throws -> WeatherData {
+        print("\n🌐 WeatherService - Starting API Calls")
         let pointURL = "\(baseURL)/points/\(latitude),\(longitude)"
         
         guard let url = URL(string: pointURL) else {
             throw NSError(domain: "Invalid URL", code: 0)
         }
         
+        print("1️⃣ Fetching grid points from: \(pointURL)")
         let (pointData, _) = try await URLSession.shared.data(from: url)
         let pointResponse = try JSONDecoder().decode(WeatherPointResponse.self, from: pointData)
         
@@ -190,13 +192,16 @@ class WeatherService {
             throw NSError(domain: "Invalid API Response", code: 0)
         }
         
-        // Fetch forecast data
+        print("2️⃣ Fetching forecast from: \(forecastURL)")
         let (forecastData, _) = try await URLSession.shared.data(from: forecastURL)
         let forecastResponse = try JSONDecoder().decode(WeatherForecast.self, from: forecastData)
         
-        // Fetch and parse alerts
+        print("3️⃣ Fetching alerts from: \(alertsURL)")
         let (alertData, _) = try await URLSession.shared.data(from: alertsURL)
+        
+        print("4️⃣ Parsing alerts response...")
         let alertsResponse = try JSONDecoder().decode(NWSAlertResponse.self, from: alertData)
+        print("📝 Raw alert features count: \(alertsResponse.features.count)")
         
         // Map alerts to our model
         let alerts = alertsResponse.features.map { feature -> WeatherAlertData in
@@ -206,9 +211,11 @@ class WeatherService {
                 description: props.description,
                 startTime: props.effective ?? props.onset,
                 endTime: props.expires ?? props.ends,
-                temperature: nil // NWS alerts don't include temperature
+                temperature: nil
             )
         }
+        
+        print("5️⃣ Processed \(alerts.count) alerts")
         
         let dailyForecasts = forecastResponse.properties.periods.map { period in
             DailyForecast(

@@ -18,17 +18,35 @@ class TodayViewController: UIViewController {
     @IBOutlet weak var hourlyForecastStackView: UIStackView!
 
     private var dateTimer: Timer?
+    private var currentWeather: CurrentWeather?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Add observer for outfit updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOutfitUpdate),
+            name: NSNotification.Name("OutfitUpdated"),
+            object: nil
+        )
+        
         fetchWeather()
         setupDateTimeUpdates()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        print("🔄 Today view appearing, refreshing data...")
+        // Refresh weather and outfit data when view appears
+        fetchWeather()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         dateTimer?.invalidate()
         dateTimer = nil
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setupDateTimeUpdates() {
@@ -55,6 +73,38 @@ class TodayViewController: UIViewController {
         }
     }
 
+    @objc private func handleOutfitUpdate() {
+        print("🔄 Outfit updated, refreshing suggested outfit...")
+        // Only refresh outfit suggestion if we have current weather
+        if let weather = self.currentWeather {
+            self.updateSuggestedOutfit(for: weather)
+        } else {
+            // If no weather data, fetch everything again
+            self.fetchWeather()
+        }
+    }
+    
+    private func updateSuggestedOutfit(for weather: CurrentWeather) {
+        let suggestedOutfit = OutfitStore.shared.getSuggestedOutfit(for: weather)
+        
+        DispatchQueue.main.async {
+            if let outfit = suggestedOutfit {
+                print("👕 Displaying outfit: \(outfit.name)")
+                print("   Items: \(outfit.items)")
+                self.outfitLabel1.text = outfit.items.count > 0 ? outfit.items[0] : ""
+                self.outfitLabel2.text = outfit.items.count > 1 ? outfit.items[1] : ""
+                self.outfitLabel3.text = outfit.items.count > 2 ? outfit.items[2] : ""
+            } else {
+                print("⚠️ No outfit found for current conditions")
+                print("   Temperature: \(weather.temperature)°F")
+                print("   Condition: \(weather.condition)")
+                self.outfitLabel1.text = "No saved outfit"
+                self.outfitLabel2.text = ""
+                self.outfitLabel3.text = ""
+            }
+        }
+    }
+
     func fetchWeather() {
         Task {
             do {
@@ -66,28 +116,18 @@ class TodayViewController: UIViewController {
                 print("   Condition: \(weather.current.condition)")
                 print("   Feels Like: \(weather.current.temperature)°F")
 
-                let suggestedOutfit = OutfitStore.shared.getSuggestedOutfit(for: weather.current)
+                // Store current weather for later use
+                self.currentWeather = weather.current
 
                 DispatchQueue.main.async {
                     self.temperatureLabel.text = "\(weather.current.temperature)°F"
                     self.conditionLabel.text = weather.current.condition
                     self.feelsLikeLabel.text = "Feels Like: \(weather.current.temperature)°F"
-
-                    if let outfit = suggestedOutfit {
-                        print("👕 Displaying outfit: \(outfit.name)")
-                        print("   Items: \(outfit.items)")
-                        self.outfitLabel1.text = outfit.items.count > 0 ? outfit.items[0] : ""
-                        self.outfitLabel2.text = outfit.items.count > 1 ? outfit.items[1] : ""
-                        self.outfitLabel3.text = outfit.items.count > 2 ? outfit.items[2] : ""
-                    } else {
-                        print("⚠️ No outfit found for current conditions")
-                        print("   Temperature: \(weather.current.temperature)°F")
-                        print("   Condition: \(weather.current.condition)")
-                        self.outfitLabel1.text = "No saved outfit"
-                        self.outfitLabel2.text = ""
-                        self.outfitLabel3.text = ""
-                    }
                 }
+                
+                // Update outfit suggestion
+                self.updateSuggestedOutfit(for: weather.current)
+                
             } catch {
                 print("❌ Failed to fetch weather: \(error)")
             }

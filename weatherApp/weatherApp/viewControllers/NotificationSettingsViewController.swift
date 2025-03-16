@@ -21,6 +21,9 @@ class NotificationSettingsViewController: UIViewController, UIPickerViewDataSour
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Request notification permission
+        NotificationManager.shared.requestPermission()
+
         // Set pickers' dataSource and delegate
         belowTempPicker.dataSource = self
         belowTempPicker.delegate = self
@@ -44,10 +47,27 @@ class NotificationSettingsViewController: UIViewController, UIPickerViewDataSour
         defaults.set(selectedBelowTemp, forKey: "belowTemp")
         defaults.set(selectedAboveTemp, forKey: "aboveTemp")
 
-        // Show confirmation
+        // Create summary of changes
+        var enabledFeatures: [String] = []
+        if weatherAlertsEnabled { enabledFeatures.append("Weather Changes") }
+        if tempAlertsEnabled { enabledFeatures.append("Temperature Changes") }
+        if rainAlertsEnabled { enabledFeatures.append("Rain Forecast") }
+        
+        let summaryText = enabledFeatures.isEmpty ? 
+            "All alerts are disabled" : 
+            "Enabled alerts: \(enabledFeatures.joined(separator: ", "))\nTemperature range: \(selectedBelowTemp)°F - \(selectedAboveTemp)°F"
+
+        // Show alert dialog
         let alert = UIAlertController(title: "Saved", message: "Your notification settings have been saved!", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+
+        // Schedule notification
+        NotificationManager.shared.scheduleNotification(
+            title: "Weather Alert Settings Updated",
+            body: summaryText,
+            timeInterval: 1
+        )
     }
 
     func loadSettings() {

@@ -21,5 +21,9 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to fetch accurate weather alerts for your area.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need your location to fetch weather alerts even when the app is not active.</string>
 </dict>
 </plist>
