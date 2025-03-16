@@ -41,8 +41,6 @@ class WeeklyForecastViewController: UIViewController {
 }
 
 
-
-// MARK: - TableView DataSource & Delegate
 extension WeeklyForecastViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         print("📊 TableView Rows: \(weeklyForecast.count)")
@@ -80,11 +78,11 @@ extension WeeklyForecastViewController: UITableViewDataSource, UITableViewDelega
         cell.temperatureLabel.text = "\(forecast.high)°F"
 
         // ✅ Fetch suggested outfit
-        if let suggestedOutfit = OutfitStore.shared.getSuggestedOutfit(for: CurrentWeather(temperature: forecast.high, condition: forecast.condition, icon: "")) {
-            cell.outfitLabel.text = suggestedOutfit.items.joined(separator: ", ")
-        } else {
-            cell.outfitLabel.text = "No outfit suggested"
-        }
+//        if let suggestedOutfit = OutfitStore.shared.getSuggestedOutfit(for: CurrentWeather(temperature: forecast.high, condition: forecast.condition, icon: "")) {
+//            cell.outfitLabel.text = suggestedOutfit.items.joined(separator: ", ")
+//        } else {
+//            cell.outfitLabel.text = "No outfit suggested"
+//        }
 
         return cell
     }

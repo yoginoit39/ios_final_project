@@ -158,34 +158,58 @@
 //struct WeatherAlertResponse: Codable {
 //    let alerts: [WeatherAlert]
 //}
-
 import Foundation
 
 class WeatherService {
     static let shared = WeatherService()
     private let baseURL = "https://api.weather.gov"
-
+    
+    func getHourlyWeather(latitude: Double, longitude: Double) async throws -> WeatherData {
+        let urlString = "https://api.weather.com/v3/wx/forecast/hourly?lat=\(latitude)&lon=\(longitude)&units=imperial&apiKey=YOUR_API_KEY"
+        
+        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+        
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let decodedData = try JSONDecoder().decode(WeatherData.self, from: data)
+        
+        return decodedData
+    }
+    
     func getCurrentWeather(latitude: Double, longitude: Double) async throws -> WeatherData {
         let pointURL = "\(baseURL)/points/\(latitude),\(longitude)"
-
+        
         guard let url = URL(string: pointURL) else {
             throw NSError(domain: "Invalid URL", code: 0)
         }
-
+        
         let (pointData, _) = try await URLSession.shared.data(from: url)
         let pointResponse = try JSONDecoder().decode(WeatherPointResponse.self, from: pointData)
-
+        
         guard let forecastURL = URL(string: pointResponse.properties.forecast),
               let alertsURL = URL(string: "\(baseURL)/alerts/active?point=\(latitude),\(longitude)") else {
             throw NSError(domain: "Invalid API Response", code: 0)
         }
-
+        
+        // Fetch forecast data
         let (forecastData, _) = try await URLSession.shared.data(from: forecastURL)
         let forecastResponse = try JSONDecoder().decode(WeatherForecast.self, from: forecastData)
-
+        
+        // Fetch and parse alerts
         let (alertData, _) = try await URLSession.shared.data(from: alertsURL)
-        let alertsResponse = try? JSONDecoder().decode(WeatherAlertResponse.self, from: alertData)
-
+        let alertsResponse = try JSONDecoder().decode(NWSAlertResponse.self, from: alertData)
+        
+        // Map alerts to our model
+        let alerts = alertsResponse.features.map { feature -> WeatherAlertData in
+            let props = feature.properties
+            return WeatherAlertData(
+                event: props.event,
+                description: props.description,
+                startTime: props.effective ?? props.onset,
+                endTime: props.expires ?? props.ends,
+                temperature: nil // NWS alerts don't include temperature
+            )
+        }
+        
         let dailyForecasts = forecastResponse.properties.periods.map { period in
             DailyForecast(
                 date: Date(),
@@ -194,7 +218,7 @@ class WeatherService {
                 condition: period.shortForecast
             )
         }
-
+        
         return WeatherData(
             current: CurrentWeather(
                 temperature: forecastResponse.properties.periods.first?.temperature ?? 0,
@@ -202,12 +226,12 @@ class WeatherService {
                 icon: ""
             ),
             forecast: dailyForecasts,
-            alerts: alertsResponse?.features.map { $0.properties } ?? [] // ✅ Corrected API mapping
+            alerts: alerts
         )
     }
 }
 
-// ✅ API Models
+// API Response Models
 struct WeatherPointResponse: Codable {
     let properties: WeatherPointProperties
 }
@@ -222,24 +246,27 @@ struct WeatherForecast: Codable {
         let temperature: Double
         let shortForecast: String
     }
-
+    
     let properties: Properties
     struct Properties: Codable {
         let periods: [ForecastPeriod]
     }
 }
 
-// ✅ Corrected Weather Alerts
-struct WeatherAlertResponse: Codable {
-    let features: [WeatherAlertFeature]
+// NWS Alert Response Models
+struct NWSAlertResponse: Codable {
+    let features: [NWSAlertFeature]
 }
 
-struct WeatherAlertFeature: Codable {
-    let properties: WeatherAlertData
+struct NWSAlertFeature: Codable {
+    let properties: NWSAlertProperties
 }
 
-// ✅ Avoid name conflict: Rename to WeatherAlertData
-struct WeatherAlertData: Codable {
+struct NWSAlertProperties: Codable {
     let event: String
     let description: String
+    let effective: String?
+    let onset: String?
+    let expires: String?
+    let ends: String?
 }

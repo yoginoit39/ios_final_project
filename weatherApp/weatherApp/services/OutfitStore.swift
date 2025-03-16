@@ -245,17 +245,60 @@ class OutfitStore {
         }
     }
     
-        func getSuggestedOutfit(for weather: CurrentWeather) -> Outfit? {
-            let matches = savedOutfits.filter { outfit in
-                let isWeatherMatching = outfit.weatherTypes.contains { savedType in
-                    let savedLower = savedType.lowercased()
-                    let weatherLower = weather.condition.lowercased()
-                    return weatherLower.contains(savedLower) || savedLower.contains(weatherLower)
+    // ✅ Get suggested outfit based on weather condition
+    func getSuggestedOutfit(for weather: CurrentWeather) -> Outfit? {
+        print("🔍 Searching outfit for Weather Condition: \(weather.condition), Temperature: \(weather.temperature)°F")
+        print("📱 Total saved outfits: \(savedOutfits.count)")
+
+        // Map similar weather conditions
+        let weatherMappings: [String: [String]] = [
+            "clear": ["clear", "sunny", "mostly sunny"],
+            "cloudy": ["cloudy", "mostly cloudy", "partly cloudy", "overcast"],
+            "rain": ["rain", "rain showers", "light rain", "heavy rain", "drizzle"],
+            "snow": ["snow", "light snow", "heavy snow", "sleet"],
+            "storm": ["thunderstorms", "thunderstorm"],
+            "fog": ["fog", "haze", "mist"],
+            "wind": ["windy", "breezy", "gusty winds"]
+        ]
+
+        let currentWeatherLower = weather.condition.lowercased()
+        
+        let matches = savedOutfits.filter { outfit in
+            // Temperature check
+            let isTempMatching = weather.temperature >= outfit.minTemp && weather.temperature <= outfit.maxTemp
+            
+            // Weather condition check
+            let isWeatherMatching = outfit.weatherTypes.contains { savedType in
+                let savedLower = savedType.lowercased()
+                
+                // Direct match
+                if currentWeatherLower.contains(savedLower) || savedLower.contains(currentWeatherLower) {
+                    return true
                 }
-    
-                let isTempMatching = weather.temperature >= outfit.minTemp && weather.temperature <= outfit.maxTemp
-                return isWeatherMatching && isTempMatching
+                
+                // Check weather mappings
+                for (_, conditions) in weatherMappings {
+                    if conditions.contains(savedLower) && conditions.contains(currentWeatherLower) {
+                        return true
+                    }
+                }
+                
+                return false
             }
-            return matches.first
+            
+            print("👕 Checking Outfit: \(outfit.name)")
+            print("   Temperature Match: \(isTempMatching) (Current: \(weather.temperature)°F, Range: \(outfit.minTemp)°F - \(outfit.maxTemp)°F)")
+            print("   Weather Match: \(isWeatherMatching) (Current: \(weather.condition), Outfit Types: \(outfit.weatherTypes))")
+            
+            return isWeatherMatching && isTempMatching
         }
+
+        if let match = matches.first {
+            print("✅ Found matching outfit: \(match.name)")
+        } else {
+            print("❌ No matching outfit found")
+        }
+
+        return matches.first
+    }
 }

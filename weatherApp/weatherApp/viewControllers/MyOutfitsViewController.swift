@@ -21,7 +21,7 @@ class MyOutfitsViewController: UIViewController, UITableViewDelegate, UITableVie
 
     // ✅ Updated Weather Conditions (Matches API)
     private let weatherTypes = [
-        "All", "Clear", "Mostly Sunny", "Partly Cloudy", "Cloudy", "Overcast",
+        "All", "Clear", "Mostly Sunny", "Partly Cloudy", "Cloudy", "Mostly Cloudy", "Overcast",
         "Rain Showers", "Light Rain", "Heavy Rain", "Thunderstorms",
         "Drizzle", "Snow", "Light Snow", "Heavy Snow", "Sleet",
         "Freezing Rain", "Fog", "Haze", "Dust", "Smoke",
@@ -37,6 +37,27 @@ class MyOutfitsViewController: UIViewController, UITableViewDelegate, UITableVie
         weatherFilterPicker.delegate = self
         weatherFilterPicker.dataSource = self
         
+        // Add observer for outfit updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOutfitUpdate),
+            name: NSNotification.Name("OutfitUpdated"),
+            object: nil
+        )
+        
+        loadOutfits()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadOutfits() // Reload data when view appears
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleOutfitUpdate() {
         loadOutfits()
     }
     
@@ -71,10 +92,23 @@ class MyOutfitsViewController: UIViewController, UITableViewDelegate, UITableVie
     
     // ✅ Load outfits from storage
     private func loadOutfits() {
-        outfits = OutfitStore.shared.getAllOutfits() // ✅ Now persistent
+        outfits = OutfitStore.shared.getAllOutfits()
         filteredOutfits = outfits
-        tableView.reloadData()
-        print("📂 Outfits loaded in MyOutfitsViewController: \(outfits.count)")
+        
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+            
+            // Show empty state message if no outfits
+            if self.outfits.isEmpty {
+                let label = UILabel()
+                label.text = "No outfits saved yet"
+                label.textAlignment = .center
+                label.textColor = .gray
+                self.tableView.backgroundView = label
+            } else {
+                self.tableView.backgroundView = nil
+            }
+        }
     }
     
     // ✅ Number of sections in tableView
@@ -99,27 +133,6 @@ class MyOutfitsViewController: UIViewController, UITableViewDelegate, UITableVie
     }
     
     // ✅ Improved Delete Outfit Function
-//    @IBAction func deleteOutfitTapped(_ sender: UIButton) {
-//        // ✅ Ensure the button is inside a UITableViewCell
-//        guard let cell = sender.superview?.superview as? UITableViewCell,
-//              let indexPath = tableView.indexPath(for: cell) else {
-//            print("❌ Failed to get indexPath for deletion")
-//            return
-//        }
-//
-//        let outfitToDelete = filteredOutfits[indexPath.section]
-//
-//        // ✅ Remove from OutfitStore (Persistent storage)
-//        OutfitStore.shared.deleteOutfit(outfitToDelete)
-//
-//        // ✅ Update local lists
-//        outfits.removeAll { $0.name == outfitToDelete.name }
-//        filteredOutfits.remove(at: indexPath.section)
-//
-//        // ✅ Reload table to reflect deletion
-//        tableView.reloadData()
-//    }
-    
     @IBAction func deleteOutfitTapped(_ sender: UIButton) {
         guard let cell = sender.superview?.superview as? UITableViewCell,
               let indexPath = tableView.indexPath(for: cell) else {
@@ -128,20 +141,19 @@ class MyOutfitsViewController: UIViewController, UITableViewDelegate, UITableVie
         }
 
         let outfitToDelete = filteredOutfits[indexPath.section]
-
-        // ✅ Remove from storage and update table
         OutfitStore.shared.deleteOutfit(outfitToDelete)
         outfits.removeAll { $0.name == outfitToDelete.name }
         filteredOutfits.remove(at: indexPath.section)
+        
+        // Post notification that outfit was updated
+        NotificationCenter.default.post(name: NSNotification.Name("OutfitUpdated"), object: nil)
+        
         tableView.reloadData()
-
-        // ✅ Send system notification (Fixed the function call)
-      NotificationManager.shared.sendNotification(title: "Outfit Removed", message: "You deleted \(outfitToDelete.name) from your outfits.")
-
-        // ✅ Post in-app notification
-        NotificationCenter.default.post(name: NSNotification.Name("OutfitNotification"), object: "🗑 Outfit Removed: \(outfitToDelete.name)")
-
-        print("🗑 Outfit deleted: \(outfitToDelete.name)")
+        
+        NotificationManager.shared.sendNotification(
+            title: "Outfit Removed",
+            message: "You deleted \(outfitToDelete.name) from your outfits."
+        )
     }
 
 

@@ -69,31 +69,6 @@ class AddOutfitViewController: UIViewController, UIPickerViewDelegate, UIPickerV
     }
 
     // ✅ Save Outfit
-//    @IBAction func saveTapped(_ sender: UIButton) {
-//        guard let name = nameTextField.text, !clothingItems.isEmpty, let weather = selectedWeatherType else {
-//            showError(message: "Please fill all fields and add at least one clothing item")
-//            return
-//        }
-//
-//        let minTemp = temperatures[minTempPicker.selectedRow(inComponent: 0)]
-//        let maxTemp = temperatures[maxTempPicker.selectedRow(inComponent: 0)]
-//
-//        let newOutfit = Outfit(
-//            name: name,
-//            minTemp: Double(minTemp),
-//            maxTemp: Double(maxTemp),
-//            weatherTypes: [weather],
-//            items: clothingItems
-//        )
-//
-//        if let existingOutfit = outfitToEdit {
-//            OutfitStore.shared.deleteOutfit(existingOutfit)
-//        }
-//
-//        OutfitStore.shared.saveOutfit(newOutfit) // ✅ Now saved persistently
-//        navigationController?.popViewController(animated: true)
-//    }
-    
     @IBAction func saveTapped(_ sender: UIButton) {
         guard let name = nameTextField.text, !clothingItems.isEmpty, let weather = selectedWeatherType else {
             showError(message: "Please fill all fields and add at least one clothing item")
@@ -116,17 +91,18 @@ class AddOutfitViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         }
 
         OutfitStore.shared.saveOutfit(newOutfit)
+        
+        // Post notification that outfit was updated
+        NotificationCenter.default.post(name: NSNotification.Name("OutfitUpdated"), object: nil)
 
-        // ✅ Send system notification
-        NotificationManager.shared.sendNotification(title: "New Outfit Added", message: "You added \(name) to your outfits.")
+        // Send system notification
+        NotificationManager.shared.sendNotification(
+            title: "New Outfit Added",
+            message: "You added \(name) to your outfits."
+        )
 
-        // ✅ Post in-app notification
-        NotificationCenter.default.post(name: NSNotification.Name("OutfitNotification"), object: "✅ Outfit Added: \(name)")
-
-        print("✅ Outfit saved: \(name)")
         navigationController?.popViewController(animated: true)
     }
-
 
     // ✅ Add Clothing Item
     @IBAction func addClothingItemTapped(_ sender: UIButton) {
