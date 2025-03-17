@@ -14,6 +14,7 @@ import CoreLocation
 class TimelyWeatherAlertsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var emptyStateView: UIView!
     
     var weatherAlerts: [WeatherAlertData] = []
     private var previousAlertCount = 0 // Track previous number of alerts
@@ -88,11 +89,7 @@ class TimelyWeatherAlertsViewController: UIViewController, UITableViewDelegate, 
                     
                     if self.weatherAlerts.isEmpty {
                         print("ℹ️ No active alerts - showing empty state message")
-                        let label = UILabel()
-                        label.text = "No active weather alerts"
-                        label.textAlignment = .center
-                        label.textColor = .gray
-                        self.tableView.backgroundView = label
+                        self.tableView.backgroundView = self.emptyStateView
                     } else {
                         print("✅ Displaying \(self.weatherAlerts.count) alert(s)")
                         self.tableView.backgroundView = nil

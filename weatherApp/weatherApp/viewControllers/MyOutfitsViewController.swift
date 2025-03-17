@@ -21,7 +21,7 @@ class MyOutfitsViewController: UIViewController, UITableViewDelegate, UITableVie
 
     // ✅ Updated Weather Conditions (Matches API)
     private let weatherTypes = [
-        "All", "Clear", "Mostly Sunny", "Partly Cloudy", "Cloudy", "Mostly Cloudy", "Overcast",
+        "All", "Clear","Mostly Clear", "Sunny", "Mostly Sunny", "Partly Cloudy", "Cloudy", "Mostly Cloudy", "Overcast",
         "Rain Showers", "Light Rain", "Heavy Rain", "Thunderstorms",
         "Drizzle", "Snow", "Light Snow", "Heavy Snow", "Sleet",
         "Freezing Rain", "Fog", "Haze", "Dust", "Smoke",

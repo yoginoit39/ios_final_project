@@ -81,8 +81,8 @@ class AddOutfitViewController: UIViewController, UIPickerViewDelegate, UIPickerV
         tableView.reloadData()
         
         // Reset pickers to default values
-        minTempPicker.selectRow(temperatures.firstIndex(of: 60) ?? 0, inComponent: 0, animated: false)
-        maxTempPicker.selectRow(temperatures.firstIndex(of: 80) ?? 0, inComponent: 0, animated: false)
+        minTempPicker.selectRow(temperatures.firstIndex(of: -0) ?? 0, inComponent: 0, animated: true)
+        maxTempPicker.selectRow(temperatures.firstIndex(of: 80) ?? 0, inComponent: 0, animated: true)
         weatherTypePicker.selectRow(0, inComponent: 0, animated: false)
         selectedWeatherType = weatherOptions[0]
         
