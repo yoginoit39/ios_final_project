@@ -751,7 +751,7 @@
                             <view hidden="YES" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lSh-7r-gzZ">
                                 <rect key="frame" x="0.0" y="159" width="393" height="535"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="No active weather alerts" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KTT-89-BTy">
+                                    <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="No active weather alerts" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KTT-89-BTy">
                                         <rect key="frame" x="104" y="280" width="184" height="21"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
@@ -768,7 +768,7 @@
                                 <rect key="frame" x="-22" y="-67" width="433" height="228"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Weather Alerts" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="4HI-cH-4XG">
-                                        <rect key="frame" x="120" y="156" width="192" height="24"/>
+                                        <rect key="frame" x="120.66666666666669" y="156" width="192" height="24"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="24" id="M2m-vD-zjh"/>
                                             <constraint firstAttribute="width" constant="192" id="iCu-qJ-mjt"/>

@@ -9,7 +9,7 @@ import UIKit
 
 class AddOutfitViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource, UITableViewDelegate, UITableViewDataSource {
 
-    // ✅ UI Outlets (All should be connected in Storyboard)
+    
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var minTempPicker: UIPickerView!
     @IBOutlet weak var maxTempPicker: UIPickerView!
